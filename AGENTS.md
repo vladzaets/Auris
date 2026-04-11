@@ -26,7 +26,7 @@ This runs xcodebuild, assembles `Auris.app` with all resource bundles (metallib,
 
 ## Architecture
 
-- Swift Package Manager project with local dependency on `mlx-swift-audio` (`../mlx-swift-audio`)
+- Swift Package Manager project with local dependency on [mlx-swift-audio](https://github.com/DePasqualeOrg/mlx-swift-audio) (`../mlx-swift-audio`)
 - Depends on MLX (Apple's machine learning framework) which requires Metal GPU shaders
 - Minimum macOS 15.4
 - Settings stored in `~/.auris/settings.json` (migrated from UserDefaults on first launch)
