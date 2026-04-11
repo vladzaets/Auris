@@ -136,6 +136,7 @@ final class Settings: @unchecked Sendable {
         let loaded = Self.loadFromDisk()
         isFirstLaunch = loaded == nil
         stored = loaded ?? StoredSettings()
+        if isFirstLaunch { save() }
     }
 
     private func save() {
