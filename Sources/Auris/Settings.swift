@@ -74,6 +74,7 @@ struct StoredSettings: Codable {
 final class Settings: @unchecked Sendable {
     static let shared = Settings()
 
+    private(set) var isFirstLaunch: Bool
     private var stored: StoredSettings
 
     var language: AppLanguage {
@@ -132,7 +133,9 @@ final class Settings: @unchecked Sendable {
     private init() {
         AppConstants.ensureDataDir()
         Self.migrateFromUserDefaults()
-        stored = Self.loadFromDisk() ?? StoredSettings()
+        let loaded = Self.loadFromDisk()
+        isFirstLaunch = loaded == nil
+        stored = loaded ?? StoredSettings()
     }
 
     private func save() {

@@ -72,9 +72,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     "Accessibility permission is required. Go to System Settings → Privacy & Security → Accessibility and enable Auris, then relaunch.")
             }
 
-            let hotkeyLabel = Settings.shared.recordingHotkey.displayName
-            showNotification("Welcome to Auris!",
-                "Hold the \(hotkeyLabel) key to dictate, release to transcribe and paste.")
+            if Settings.shared.isFirstLaunch {
+                let hotkeyLabel = Settings.shared.recordingHotkey.displayName
+                showNotification("Welcome to Auris!",
+                    "Hold the \(hotkeyLabel) key to dictate, release to transcribe and paste.")
+            }
         }
     }
 
