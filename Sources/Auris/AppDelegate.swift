@@ -86,6 +86,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let menu = NSMenu()
 
         statusMenuItem = NSMenuItem(title: "Status: Idle", action: nil, keyEquivalent: "")
+        statusMenuItem.isEnabled = false
         recordMenuItem = NSMenuItem(title: "Start Recording", action: #selector(toggleRecording), keyEquivalent: "")
         let cancelItem = NSMenuItem(title: "Cancel Transcription", action: #selector(cancelTranscription), keyEquivalent: "")
         cancelMenuItem = cancelItem
@@ -181,6 +182,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Auris", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
+        menu.autoenablesItems = false
         statusItem.menu = menu
     }
 
@@ -294,7 +296,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard pipeline.state == .recording else { return }
         pipeline.stopRecording()
         SoundPlayer.play(Settings.shared.soundStop)
-        setTranscribingState()
+        if pipeline.state == .transcribing {
+            setTranscribingState()
+        } else {
+            resetToIdle()
+        }
     }
 
     // MARK: - Actions
