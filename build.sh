@@ -27,6 +27,10 @@ if [ -f "$PROJECT_DIR/Resources/icon.icns" ]; then
     cp "$PROJECT_DIR/Resources/icon.icns" "$APP/Contents/Resources/icon.icns"
 fi
 
+if [ -f "$PROJECT_DIR/Resources/54x54.png" ]; then
+    cp "$PROJECT_DIR/Resources/54x54.png" "$APP/Contents/Resources/54x54.png"
+fi
+
 cat > "$APP/Contents/Info.plist" << 'EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

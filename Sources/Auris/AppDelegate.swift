@@ -6,6 +6,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate?
 
     private var statusItem: NSStatusItem!
+    private let idleIcon: NSImage = {
+        let url = Bundle.main.url(forResource: "54x54", withExtension: "png")!
+        let img = NSImage(contentsOf: url)!
+        img.size = NSSize(width: 18, height: 18)
+        img.isTemplate = true
+        return img
+    }()
     private let pipeline = TranscriptionPipeline()
     private var hotkeyManager: HotkeyManager?
     private let viewer = TranscriptionsViewer()
@@ -26,8 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Auris")
-            button.image?.size = NSSize(width: 18, height: 18)
+            button.image = idleIcon
         }
 
         buildMenu()
@@ -234,8 +240,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         cancelMenuItem.isEnabled = false
         recordMenuItem.title = "Start Recording"
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Auris")
-            button.image?.size = NSSize(width: 18, height: 18)
+            button.image = idleIcon
         }
     }
 
