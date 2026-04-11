@@ -6,10 +6,15 @@ final class AudioRecorder: NSObject, AVAudioRecorderDelegate {
     private var recorder: AVAudioRecorder?
     private(set) var isRecording = false
     private(set) var recordingURL: URL?
-    private var _duration: TimeInterval = 0
-    private var durationTimer: Timer?
+    private var recordingStartTime: Date?
+    private var _finalDuration: TimeInterval = 0
 
-    var duration: TimeInterval { _duration }
+    var duration: TimeInterval {
+        if isRecording, let start = recordingStartTime {
+            return Date().timeIntervalSince(start)
+        }
+        return _finalDuration
+    }
 
     func startRecording() throws {
         guard !isRecording else { return }
@@ -38,36 +43,28 @@ final class AudioRecorder: NSObject, AVAudioRecorderDelegate {
         recorder = audioRecorder
         recordingURL = fileURL
         isRecording = true
-        _duration = 0
-        startDurationTimer()
+        recordingStartTime = Date()
+        _finalDuration = 0
     }
 
     func stopRecording() -> URL? {
         guard isRecording else { return nil }
-        stopDurationTimer()
+        if let start = recordingStartTime {
+            _finalDuration = Date().timeIntervalSince(start)
+        }
         recorder?.stop()
         isRecording = false
+        recordingStartTime = nil
         return recordingURL
-    }
-
-    private func startDurationTimer() {
-        durationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                guard let self, self.isRecording else { return }
-                self._duration = self.recorder?.currentTime ?? 0
-            }
-        }
-    }
-
-    private func stopDurationTimer() {
-        durationTimer?.invalidate()
-        durationTimer = nil
     }
 
     nonisolated func audioRecorderDidFinishRecording(_ recorder: AVAudioRecorder, successfully flag: Bool) {
         Task { @MainActor in
+            if let start = self.recordingStartTime {
+                self._finalDuration = Date().timeIntervalSince(start)
+            }
             self.isRecording = false
-            self.stopDurationTimer()
+            self.recordingStartTime = nil
         }
     }
 }

@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeySubmenu: NSMenu!
     private var autostartMenuItem: NSMenuItem!
     private var timer: Timer?
+    private var recordingStartTime: Date?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
@@ -52,6 +53,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.pipeline.checkTimeout()
             }
         }
+        RunLoop.main.add(timer!, forMode: .common)
     }
 
     private func requestPermissionsAndStart() {
@@ -240,6 +242,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func resetToIdle() {
+        recordingStartTime = nil
         statusMenuItem.title = "Status: Idle"
         cancelMenuItem.isEnabled = false
         recordMenuItem.title = "Start Recording"
@@ -249,6 +252,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setRecordingState() {
+        recordingStartTime = Date()
         statusMenuItem.title = "Status: Recording... 0s"
         recordMenuItem.title = "Stop Recording"
         cancelMenuItem.isEnabled = false
@@ -269,8 +273,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateRecordingTimer() {
-        if pipeline.state == .recording {
-            let elapsed = Int(pipeline.recordingDuration)
+        if pipeline.state == .recording, let start = recordingStartTime {
+            let elapsed = Int(Date().timeIntervalSince(start))
             statusMenuItem.title = "Status: Recording... \(elapsed)s"
         }
     }
