@@ -5,11 +5,16 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$PROJECT_DIR/.build/xcode"
 APP="$PROJECT_DIR/Auris.app"
 
-echo "==> Building with xcodebuild (Debug)..."
-xcodebuild -scheme Auris -destination 'platform=macOS' -derivedDataPath "$BUILD_DIR" \
-    -quiet
+CONFIG="Release"
+if [[ "${1:-}" == "--debug" ]]; then
+    CONFIG="Debug"
+fi
 
-PRODUCTS="$BUILD_DIR/Build/Products/Debug"
+echo "==> Building with xcodebuild ($CONFIG)..."
+xcodebuild -scheme Auris -destination 'platform=macOS' -derivedDataPath "$BUILD_DIR" \
+    -configuration "$CONFIG" -quiet
+
+PRODUCTS="$BUILD_DIR/Build/Products/$CONFIG"
 
 if [ ! -f "$PRODUCTS/Auris" ]; then
     echo "ERROR: Binary not found at $PRODUCTS/Auris"
