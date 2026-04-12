@@ -1,14 +1,18 @@
 import Foundation
 
 struct TranscriptionLog {
-    static func save(text: String, model: String) {
+    static func save(text: String, model: String, duration: TimeInterval? = nil) {
         AppConstants.ensureDataDir()
 
-        let entry: [String: Any] = [
+        var entry: [String: Any] = [
             "timestamp": ISO8601DateFormatter().string(from: Date()),
             "text": text,
             "model": model,
         ]
+
+        if let duration {
+            entry["duration"] = Double(round(duration * 100)) / 100
+        }
 
         guard let data = try? JSONSerialization.data(
             withJSONObject: entry, options: [.withoutEscapingSlashes])

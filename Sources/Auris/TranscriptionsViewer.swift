@@ -140,7 +140,11 @@ final class TranscriptionsViewer: NSObject {
             }
 
             let model = entry["model"] as? String ?? ""
-            let meta = NSMutableAttributedString(string: "[\(ts)]  \(model)\n")
+            var metaParts = ["[\(ts)]", model]
+            if let duration = entry["duration"] as? Double {
+                metaParts.append(String(format: "%.2fs", duration))
+            }
+            let meta = NSMutableAttributedString(string: metaParts.joined(separator: "  ") + "\n")
             meta.addAttribute(.foregroundColor, value: metaColor, range: NSRange(location: 0, length: meta.length))
             meta.addAttribute(.font, value: metaFont, range: NSRange(location: 0, length: meta.length))
             attributed.append(meta)

@@ -215,12 +215,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenuItem.title = text
     }
 
-    func handleTranscriptionComplete(_ text: String?) {
+    func handleTranscriptionComplete(_ text: String?, duration: TimeInterval? = nil) {
         resetToIdle()
         guard let text, !text.isEmpty else { return }
 
         SoundPlayer.play(Settings.shared.soundComplete)
-        TranscriptionLog.save(text: text, model: Settings.shared.whisperModel.rawValue)
+        TranscriptionLog.save(text: text, model: Settings.shared.whisperModel.rawValue, duration: duration)
 
         if !TextInjector.inject(text) {
             showNotification("Error", "Failed to paste text. Check Accessibility permission.")

@@ -14,6 +14,7 @@ final class TranscriptionPipeline {
     private let engine = WhisperEngineWrapper()
     private(set) var state: AppState = .idle
     var lastText: String?
+    private(set) var lastTranscriptionDuration: TimeInterval?
     private var postProcessor: PostProcessor?
     private var transcribingSince: Date?
 
@@ -90,11 +91,13 @@ final class TranscriptionPipeline {
                 }
 
                 lastText = text
+                lastTranscriptionDuration = transcribingSince.map { Date().timeIntervalSince($0) }
                 state = .idle
-                AppDelegate.shared?.handleTranscriptionComplete(text)
+                AppDelegate.shared?.handleTranscriptionComplete(text, duration: lastTranscriptionDuration)
 
             } catch {
                 try? FileManager.default.removeItem(at: url)
+                lastTranscriptionDuration = transcribingSince.map { Date().timeIntervalSince($0) }
                 state = .idle
                 AppDelegate.shared?.handleTranscriptionError(error.localizedDescription)
             }
