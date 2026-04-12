@@ -1,5 +1,4 @@
 import Foundation
-import MLXAudio
 
 enum AppState {
     case idle

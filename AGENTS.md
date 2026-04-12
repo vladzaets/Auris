@@ -2,15 +2,17 @@
 
 ## Project
 
-macOS menu bar dictation app. Hold Fn (or Right Option / Right Command) → record → release → transcribe (MLX Whisper via mlx-swift-audio) → auto-paste. Apple Silicon only, fully on-device. Written in Swift using AppKit.
+macOS menu bar dictation app. Hold Fn (or Right Option / Right Command) → record → release → transcribe (whisper.cpp via CWhisper XCFramework) → auto-paste. Apple Silicon only, fully on-device. Written in Swift using AppKit.
 
 ## Build
 
-**Important:** Do NOT use `swift build` — it does not compile Metal shaders (.metal → .metallib), causing a runtime crash:
+**Important:** Before building, the CWhisper XCFramework must be present. Run the build script once to generate it:
 
+```bash
+./scripts/build-whisper-framework.sh
 ```
-MLX error: Failed to load the default metallib. library not found
-```
+
+This builds whisper.cpp from `../whisper.cpp` with Metal support (`GGML_METAL=ON`, `GGML_METAL_EMBED_LIBRARY=ON`) and creates `Frameworks/CWhisper.xcframework`. The Metal shaders are embedded in the library, so no separate .metallib file is needed at runtime.
 
 ### Quick build (bare binary)
 

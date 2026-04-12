@@ -4,14 +4,16 @@ import PackageDescription
 let package = Package(
     name: "Auris",
     platforms: [.macOS("15.4")],
-    dependencies: [
-        .package(path: "../mlx-swift-audio"),
-    ],
+    dependencies: [],
     targets: [
+        .binaryTarget(
+            name: "CWhisper",
+            path: "Frameworks/CWhisper.xcframework"
+        ),
         .executableTarget(
             name: "Auris",
             dependencies: [
-                .product(name: "MLXAudio", package: "mlx-swift-audio"),
+                "CWhisper",
             ],
             path: "Sources/Auris"
         ),

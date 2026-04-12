@@ -10,6 +10,11 @@ if [[ "${1:-}" == "--debug" ]]; then
     CONFIG="Debug"
 fi
 
+if [ ! -d "$PROJECT_DIR/Frameworks/CWhisper.xcframework" ]; then
+    echo "==> CWhisper.xcframework not found. Building whisper.cpp..."
+    "$PROJECT_DIR/scripts/build-whisper-framework.sh"
+fi
+
 echo "==> Building with xcodebuild ($CONFIG)..."
 xcodebuild -scheme Auris -destination 'platform=macOS' -derivedDataPath "$BUILD_DIR" \
     -configuration "$CONFIG" -quiet
@@ -92,6 +97,15 @@ for bundle in "$PRODUCTS"/*.bundle; do
     cp -R "$bundle" "$APP/Contents/Resources/$name"
     echo "    bundled $name"
 done
+
+mkdir -p "$APP/Contents/Frameworks"
+if [ -d "$PROJECT_DIR/Frameworks/CWhisper.xcframework/macos-arm64" ]; then
+    cp -R "$PROJECT_DIR/Frameworks/CWhisper.xcframework/macos-arm64/CWhisper.framework" "$APP/Contents/Frameworks/"
+    echo "    embedded CWhisper.framework"
+fi
+
+echo "==> Adding rpath for embedded frameworks..."
+install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/MacOS/Auris"
 
 echo "==> Code signing..."
 codesign --deep --force --sign - "$APP"
