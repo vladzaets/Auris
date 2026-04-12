@@ -1,4 +1,5 @@
 import AppKit
+import AVFoundation
 import Foundation
 
 enum Permissions {
@@ -6,6 +7,21 @@ enum Permissions {
         let key = "AXTrustedCheckOptionPrompt" as CFString
         let dict = [key: prompt] as CFDictionary
         return AXIsProcessTrustedWithOptions(dict)
+    }
+
+    static func triggerMicrophonePermission() {
+        let engine = AVAudioEngine()
+        let inputNode = engine.inputNode
+        let format = inputNode.outputFormat(forBus: 0)
+        guard format.sampleRate > 0 else { return }
+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { _, _ in }
+        do {
+            try engine.start()
+            engine.stop()
+        } catch {
+            engine.stop()
+        }
+        inputNode.removeTap(onBus: 0)
     }
 
     static func openAccessibilityPreferences() {

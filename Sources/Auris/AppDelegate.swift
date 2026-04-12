@@ -58,6 +58,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func requestPermissionsAndStart() {
         let accessible = Permissions.checkAccessibility(prompt: true)
+        Permissions.triggerMicrophonePermission()
 
         Task {
             do {
