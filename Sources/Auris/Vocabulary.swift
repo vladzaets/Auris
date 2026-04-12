@@ -172,4 +172,70 @@ struct Vocabulary {
         merged.merge(python) { _, new in new }
         return merged
     }
+
+    static let initialPromptVocabulary =
+        "The following is a clear, well-structured transcription. "
+        + "We deploy to PostgreSQL, MySQL, MongoDB, Redis, and Elasticsearch. "
+        + "The stack uses Kubernetes, Docker, nginx, Terraform, and CI/CD via GitHub. "
+        + "Authentication uses OAuth, JWT, CORS, and CSRF protection. "
+        + "The API layer uses GraphQL, gRPC, WebSocket, and REST API endpoints. "
+        + "The frontend is built with JavaScript, TypeScript, React, Next.js, "
+        + "Vue.js, Svelte, and Node.js, styled with Tailwind CSS and webpack. "
+        + "We follow ARIA and WCAG accessibility standards in our HTML5 and CSS Grid layouts. "
+        + "Machine learning uses PyTorch, TensorFlow, scikit-learn, NumPy, and SciPy. "
+        + "We work with LLaMA, GPT-4, DALL-E, LoRA, RAG, RLHF, ONNX, CoreML, and MLX models "
+        + "via Hugging Face, LangChain, FastAPI, Django, and Pydantic. "
+        + "Deployment targets Vercel, Cloudflare, Supabase, Gunicorn, and Uvicorn. "
+        + "We use Whisper, mlx-whisper, Auris, Claude, Anthropic, and OpenAI tools "
+        + "on macOS, iOS, iPadOS with Xcode, Swift, SwiftUI on Apple Silicon."
+
+    static func loadUserPromptTerms() -> String? {
+        let url = AppConstants.promptTermsFile
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        guard let content = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+
+        var lines: [String] = []
+        for line in content.components(separatedBy: .newlines) {
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            guard !trimmed.isEmpty, !trimmed.hasPrefix("#") else { continue }
+            lines.append(trimmed)
+        }
+        guard !lines.isEmpty else { return nil }
+        return lines.joined(separator: ", ")
+    }
+
+    static func buildInitialPrompt() -> String? {
+        let userTerms = loadUserPromptTerms()
+        if let userTerms {
+            return "\(initialPromptVocabulary), \(userTerms)"
+        }
+        return initialPromptVocabulary
+    }
+
+    static func createPromptTermsTemplate() {
+        let url = AppConstants.promptTermsFile
+        guard !FileManager.default.fileExists(atPath: url.path) else { return }
+
+        AppConstants.ensureDataDir()
+
+        let template = """
+        # Auris — Custom Prompt Terms
+        #
+        # Add words/phrases here that Whisper should recognise.
+        # These prime the speech model to expect these terms,
+        # making it more likely to transcribe them correctly.
+        #
+        # One term per line, or comma-separated.
+        # Lines starting with # are comments.
+        #
+        # Examples:
+        # Allsopp
+        # Web Directions
+        # Conffab, Respond, Scroll
+        #
+        # Changes take effect on next transcription.
+
+        """
+        try? template.write(to: url, atomically: true, encoding: .utf8)
+    }
 }

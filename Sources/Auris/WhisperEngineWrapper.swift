@@ -94,7 +94,7 @@ final class WhisperEngineWrapper {
         loadedModel = nil
     }
 
-    func transcribe(url: URL) async throws -> TranscriptionResult {
+    func transcribe(url: URL, initialPrompt: String? = nil) async throws -> TranscriptionResult {
         guard let context, isLoaded else {
             throw STTError.modelNotLoaded
         }
@@ -104,7 +104,7 @@ final class WhisperEngineWrapper {
         let ctx = context
 
         let text = try await Task.detached {
-            try Self.runTranscription(context: ctx, samples: samples, languageCode: langCode)
+            try Self.runTranscription(context: ctx, samples: samples, languageCode: langCode, initialPrompt: initialPrompt)
         }.value
 
         return TranscriptionResult(text: text)
@@ -113,7 +113,8 @@ final class WhisperEngineWrapper {
     nonisolated private static func runTranscription(
         context: WhisperContext,
         samples: [Float],
-        languageCode: String
+        languageCode: String,
+        initialPrompt: String? = nil
     ) throws -> String {
         let maxThreads = max(1, min(8, ProcessInfo.processInfo.processorCount - 2))
         let ctx = context.pointer
@@ -133,9 +134,21 @@ final class WhisperEngineWrapper {
             params.no_timestamps = false
             params.temperature = 0.0
             params.suppress_blank = true
+            params.carry_initial_prompt = initialPrompt != nil
 
-            let result = samples.withUnsafeBufferPointer { buf in
-                whisper_full(ctx, params, buf.baseAddress, Int32(buf.count))
+            let result: Int32
+            if let prompt = initialPrompt {
+                result = prompt.withCString { promptPtr in
+                    params.initial_prompt = promptPtr
+                    return samples.withUnsafeBufferPointer { buf in
+                        whisper_full(ctx, params, buf.baseAddress, Int32(buf.count))
+                    }
+                }
+            } else {
+                params.initial_prompt = nil
+                result = samples.withUnsafeBufferPointer { buf in
+                    whisper_full(ctx, params, buf.baseAddress, Int32(buf.count))
+                }
             }
 
             guard result == 0 else {

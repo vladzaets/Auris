@@ -30,6 +30,7 @@ final class TranscriptionPipeline {
         }
 
         PostProcessor.createCorrectionsTemplate()
+        Vocabulary.createPromptTermsTemplate()
         if Settings.shared.postProcessingEnabled {
             postProcessor = PostProcessor(vocabulary: Vocabulary.all)
         }
@@ -73,7 +74,7 @@ final class TranscriptionPipeline {
 
         Task {
             do {
-                let result = try await engine.transcribe(url: url)
+                let result = try await engine.transcribe(url: url, initialPrompt: Vocabulary.buildInitialPrompt())
                 try? FileManager.default.removeItem(at: url)
 
                 var text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)
