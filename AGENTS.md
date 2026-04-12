@@ -14,6 +14,8 @@ macOS menu bar dictation app. Hold Fn (or Right Option / Right Command) → reco
 
 This builds whisper.cpp from `../whisper.cpp` with Metal support (`GGML_METAL=ON`, `GGML_METAL_EMBED_LIBRARY=ON`) and creates `Frameworks/CWhisper.xcframework`. The Metal shaders are embedded in the library, so no separate .metallib file is needed at runtime.
 
+**Note:** The LSP / SourceKit will report `No such module 'CWhisper'` errors in `WhisperEngineWrapper.swift` and other files that `import CWhisper`. This is expected — the XCFramework is not on SourceKit's framework search path. The project compiles fine via `xcodebuild`. Ignore these LSP diagnostics; do not attempt to "fix" them.
+
 ### Quick build (bare binary)
 
 ```bash
