@@ -229,7 +229,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let text, !text.isEmpty else { return }
 
         SoundPlayer.play(Settings.shared.soundComplete)
-        TranscriptionLog.save(text: text, model: Settings.shared.whisperModel.rawValue, duration: duration)
+        TranscriptionLog.save(text: text, model: Settings.shared.whisperModel.rawValue, duration: duration, initialPrompt: Settings.shared.initialPromptEnabled)
 
         if !TextInjector.inject(text) {
             showNotification("Error", "Failed to paste text. Check Accessibility permission.")

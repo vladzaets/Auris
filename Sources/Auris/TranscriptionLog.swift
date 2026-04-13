@@ -1,7 +1,7 @@
 import Foundation
 
 struct TranscriptionLog {
-    static func save(text: String, model: String, duration: TimeInterval? = nil) {
+    static func save(text: String, model: String, duration: TimeInterval? = nil, initialPrompt: Bool? = nil) {
         AppConstants.ensureDataDir()
 
         var entry: [String: Any] = [
@@ -12,6 +12,10 @@ struct TranscriptionLog {
 
         if let duration {
             entry["duration"] = Double(round(duration * 100)) / 100
+        }
+
+        if let initialPrompt {
+            entry["initialPrompt"] = initialPrompt
         }
 
         guard let data = try? JSONSerialization.data(

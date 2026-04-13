@@ -144,6 +144,9 @@ final class TranscriptionsViewer: NSObject {
             if let duration = entry["duration"] as? Double {
                 metaParts.append(String(format: "%.2fs", duration))
             }
+            if let initialPrompt = entry["initialPrompt"] as? Bool {
+                metaParts.append(initialPrompt ? "prompt:on" : "prompt:off")
+            }
             let meta = NSMutableAttributedString(string: metaParts.joined(separator: "  ") + "\n")
             meta.addAttribute(.foregroundColor, value: metaColor, range: NSRange(location: 0, length: meta.length))
             meta.addAttribute(.font, value: metaFont, range: NSRange(location: 0, length: meta.length))
