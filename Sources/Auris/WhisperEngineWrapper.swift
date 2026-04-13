@@ -17,6 +17,62 @@ enum STTError: LocalizedError {
     }
 }
 
+private final class ModelDownloadDelegate: NSObject, URLSessionDownloadDelegate, @unchecked Sendable {
+    let progress: Progress
+    let handler: (@Sendable (Progress) -> Void)?
+    private let destURL: URL
+    private var continuation: CheckedContinuation<URL, Error>?
+    private var resumed = false
+
+    init(progress: Progress, handler: (@Sendable (Progress) -> Void)?, destURL: URL) {
+        self.progress = progress
+        self.handler = handler
+        self.destURL = destURL
+        super.init()
+    }
+
+    func setContinuation(_ continuation: CheckedContinuation<URL, Error>) {
+        self.continuation = continuation
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
+        if totalBytesExpectedToWrite > 0 {
+            progress.totalUnitCount = totalBytesExpectedToWrite
+        }
+        progress.completedUnitCount = totalBytesWritten
+        handler?(progress)
+    }
+
+    func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didFinishDownloadingTo location: URL) {
+        let statusCode = (downloadTask.response as? HTTPURLResponse)?.statusCode ?? 0
+        guard (200...299).contains(statusCode) else {
+            try? FileManager.default.removeItem(at: location)
+            guard !resumed else { return }
+            resumed = true
+            continuation?.resume(throwing: STTError.modelLoadFailed("Download failed with status \(statusCode)"))
+            return
+        }
+
+        do {
+            try? FileManager.default.removeItem(at: destURL)
+            try FileManager.default.moveItem(at: location, to: destURL)
+            guard !resumed else { return }
+            resumed = true
+            continuation?.resume(returning: destURL)
+        } catch {
+            guard !resumed else { return }
+            resumed = true
+            continuation?.resume(throwing: error)
+        }
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        guard let error, !resumed else { return }
+        resumed = true
+        continuation?.resume(throwing: error)
+    }
+}
+
 struct TranscriptionResult {
     let text: String
 }
@@ -200,6 +256,10 @@ final class WhisperEngineWrapper {
         }
     }
 
+    var needsDownload: Bool {
+        !FileManager.default.fileExists(atPath: modelPath)
+    }
+
     private func downloadModel(progressHandler: (@Sendable (Progress) -> Void)? = nil) async throws {
         let filename: String
         switch Settings.shared.whisperModel {
@@ -215,15 +275,19 @@ final class WhisperEngineWrapper {
         }
 
         let destURL = Self.modelsDirectory.appendingPathComponent(filename)
+        let progress = Progress(totalUnitCount: 1)
+        let delegate = ModelDownloadDelegate(progress: progress, handler: progressHandler, destURL: destURL)
+        let session = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
 
-        let (tempURL, response) = try await URLSession.shared.download(from: url, delegate: nil)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200...299).contains(httpResponse.statusCode) else {
-            try? FileManager.default.removeItem(at: tempURL)
-            throw STTError.modelLoadFailed("Download failed with status \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+        let finalURL: URL = try await withCheckedThrowingContinuation { continuation in
+            delegate.setContinuation(continuation)
+            session.downloadTask(with: url).resume()
         }
 
-        try? FileManager.default.removeItem(at: destURL)
-        try FileManager.default.moveItem(at: tempURL, to: destURL)
+        session.finishTasksAndInvalidate()
+
+        guard FileManager.default.fileExists(atPath: finalURL.path) else {
+            throw STTError.modelLoadFailed(finalURL.path)
+        }
     }
 }

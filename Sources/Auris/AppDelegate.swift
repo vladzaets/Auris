@@ -279,6 +279,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func setDownloadingState() {
+        statusMenuItem.title = "Status: Downloading… 0%"
+        recordMenuItem.title = "Start Recording"
+        cancelMenuItem.isEnabled = false
+        if let button = statusItem.button {
+            button.image = NSImage(systemSymbolName: "arrow.down.circle", accessibilityDescription: "Downloading")
+            button.image?.size = NSSize(width: 18, height: 18)
+        }
+    }
+
     private func updateRecordingTimer() {
         if pipeline.state == .recording, let start = recordingStartTime {
             let elapsed = Int(Date().timeIntervalSince(start))
@@ -357,7 +367,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updateMenuCheckmarks(submenu: modelSubmenu, selectedItem: sender)
 
         statusMenuItem.title = "Status: Switching model…"
-        setTranscribingState()
+        if let button = statusItem.button {
+            button.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: "Processing")
+            button.image?.size = NSSize(width: 18, height: 18)
+        }
 
         Task {
             do {
@@ -382,7 +395,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         updateMenuCheckmarks(submenu: languageSubmenu, selectedItem: sender)
 
         statusMenuItem.title = "Status: Switching language…"
-        setTranscribingState()
+        if let button = statusItem.button {
+            button.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: "Processing")
+            button.image?.size = NSSize(width: 18, height: 18)
+        }
 
         Task {
             do {

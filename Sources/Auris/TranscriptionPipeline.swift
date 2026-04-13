@@ -21,11 +21,17 @@ final class TranscriptionPipeline {
     var recordingDuration: TimeInterval { recorder.duration }
 
     func loadEngine() async throws {
+        let needsDownload = engine.needsDownload
         state = .downloading
+
+        if needsDownload {
+            AppDelegate.shared?.setDownloadingState()
+        }
+
         try await engine.load { progress in
             Task { @MainActor in
                 let pct = Int(progress.fractionCompleted * 100)
-                AppDelegate.shared?.updateStatus("Downloading model… \(pct)%")
+                AppDelegate.shared?.updateStatus("Status: Downloading… \(pct)%")
             }
         }
 
