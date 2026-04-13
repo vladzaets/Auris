@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let pipeline = TranscriptionPipeline()
     private var hotkeyManager: HotkeyManager?
     private let viewer = TranscriptionsViewer()
+    private let aboutWindow = AboutWindow()
     private var statusMenuItem: NSMenuItem!
     private var recordMenuItem: NSMenuItem!
     private var cancelMenuItem: NSMenuItem!
@@ -198,7 +199,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(permsItem)
 
         menu.addItem(NSMenuItem.separator())
-        menu.addItem(NSMenuItem(title: "Quit Auris", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: "About", action: #selector(showAbout), keyEquivalent: ""))
+        menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         menu.autoenablesItems = false
         statusItem.menu = menu
@@ -501,6 +503,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openMicrophone() {
         Permissions.openMicrophonePreferences()
+    }
+
+    @objc private func showAbout() {
+        aboutWindow.show()
     }
 
     // MARK: - Helpers
