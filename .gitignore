@@ -1,6 +1,7 @@
 .build/
 .swiftpm/
 *.app
+*.dmg
 .DS_Store
 Package.resolved
 Frameworks/CWhisper.xcframework

@@ -7,9 +7,11 @@ APP="$PROJECT_DIR/Auris.app"
 
 CONFIG="Release"
 ICON_MAX_SIZE=""
+BUILD_DMG=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --debug) CONFIG="Debug"; shift ;;
+        --dmg) BUILD_DMG=true; shift ;;
         --icon-max-size) ICON_MAX_SIZE="$2"; shift 2 ;;
         *) echo "Unknown option: $1"; exit 1 ;;
     esac
@@ -133,4 +135,14 @@ install_name_tool -add_rpath "@executable_path/../Frameworks" "$APP/Contents/Mac
 echo "==> Code signing..."
 codesign --deep --force --sign - "$APP"
 
-echo "==> Done: $APP"
+if [ "$BUILD_DMG" = true ]; then
+    echo "==> Creating DMG..."
+    STAGING=$(mktemp -d)
+    cp -R "$APP" "$STAGING/"
+    ln -s /Applications "$STAGING/Applications"
+    hdiutil create -volname "Auris" -srcfolder "$STAGING" -ov -format UDZO "$PROJECT_DIR/Auris.dmg"
+    rm -rf "$STAGING"
+    echo "==> Done: $PROJECT_DIR/Auris.dmg"
+else
+    echo "==> Done: $APP"
+fi
