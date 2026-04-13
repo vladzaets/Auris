@@ -2,7 +2,7 @@ import AppKit
 import ApplicationServices
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     static var shared: AppDelegate?
 
     private var statusItem: NSStatusItem!
@@ -28,6 +28,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var languageMenuItem: NSMenuItem!
     private var initialPromptMenuItem: NSMenuItem!
     private var autostartMenuItem: NSMenuItem!
+    private var accessibilityMenuItem: NSMenuItem!
+    private var inputMonitoringMenuItem: NSMenuItem!
+    private var microphoneMenuItem: NSMenuItem!
     private var timer: Timer?
     private var recordingStartTime: Date?
 
@@ -192,9 +195,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         let permsItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
         let permsMenu = NSMenu()
-        permsMenu.addItem(NSMenuItem(title: "Accessibility", action: #selector(openAccessibility), keyEquivalent: ""))
-        permsMenu.addItem(NSMenuItem(title: "Input Monitoring", action: #selector(openInputMonitoring), keyEquivalent: ""))
-        permsMenu.addItem(NSMenuItem(title: "Microphone", action: #selector(openMicrophone), keyEquivalent: ""))
+        accessibilityMenuItem = NSMenuItem(title: "Accessibility", action: #selector(openAccessibility), keyEquivalent: "")
+        inputMonitoringMenuItem = NSMenuItem(title: "Input Monitoring", action: #selector(openInputMonitoring), keyEquivalent: "")
+        microphoneMenuItem = NSMenuItem(title: "Microphone", action: #selector(openMicrophone), keyEquivalent: "")
+        permsMenu.addItem(accessibilityMenuItem)
+        permsMenu.addItem(inputMonitoringMenuItem)
+        permsMenu.addItem(microphoneMenuItem)
         permsItem.submenu = permsMenu
         menu.addItem(permsItem)
 
@@ -203,6 +209,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         menu.autoenablesItems = false
+        menu.delegate = self
         statusItem.menu = menu
     }
 
@@ -546,5 +553,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.addButton(withTitle: "OK")
         alert.alertStyle = .informational
         alert.runModal()
+    }
+
+    // MARK: - NSMenuDelegate
+
+    nonisolated func menuNeedsUpdate(_ menu: NSMenu) {
+        Task { @MainActor in
+            accessibilityMenuItem.state = Permissions.checkAccessibility() ? .on : .off
+            inputMonitoringMenuItem.state = Permissions.checkInputMonitoring() ? .on : .off
+            microphoneMenuItem.state = Permissions.checkMicrophone() ? .on : .off
+        }
     }
 }

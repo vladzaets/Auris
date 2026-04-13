@@ -9,6 +9,14 @@ enum Permissions {
         return AXIsProcessTrustedWithOptions(dict)
     }
 
+    static func checkMicrophone() -> Bool {
+        AVCaptureDevice.authorizationStatus(for: .audio) == .authorized
+    }
+
+    static func checkInputMonitoring() -> Bool {
+        CGPreflightListenEventAccess()
+    }
+
     static func triggerMicrophonePermission() {
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
