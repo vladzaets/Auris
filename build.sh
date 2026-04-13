@@ -6,9 +6,14 @@ BUILD_DIR="$PROJECT_DIR/.build/xcode"
 APP="$PROJECT_DIR/Auris.app"
 
 CONFIG="Release"
-if [[ "${1:-}" == "--debug" ]]; then
-    CONFIG="Debug"
-fi
+ICON_MAX_SIZE=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --debug) CONFIG="Debug"; shift ;;
+        --icon-max-size) ICON_MAX_SIZE="$2"; shift 2 ;;
+        *) echo "Unknown option: $1"; exit 1 ;;
+    esac
+done
 
 if [ ! -d "$PROJECT_DIR/Frameworks/CWhisper.xcframework" ]; then
     echo "==> CWhisper.xcframework not found. Building whisper.cpp..."
@@ -34,6 +39,24 @@ mkdir -p "$APP/Contents/Resources/Assets.xcassets"
 cp "$PRODUCTS/Auris" "$APP/Contents/MacOS/Auris"
 
 if [ -f "$PROJECT_DIR/Resources/icon.icns" ]; then
+    if [ -n "$ICON_MAX_SIZE" ]; then
+        echo "==> Rebuilding icon.icns with max size ${ICON_MAX_SIZE}x${ICON_MAX_SIZE}..."
+        ICONSET=$(mktemp -d)/icon.iconset
+        mkdir -p "$ICONSET"
+        SRC="$PROJECT_DIR/Resources/icon.png"
+        SIZES="16 32 128 256 512"
+        for S in $SIZES; do
+            if [ "$S" -le "$ICON_MAX_SIZE" ]; then
+                sips -z "$S" "$S" "$SRC" --out "$ICONSET/icon_${S}x${S}.png" >/dev/null
+                RETINA=$((S * 2))
+                if [ "$RETINA" -le "$ICON_MAX_SIZE" ]; then
+                    sips -z "$RETINA" "$RETINA" "$SRC" --out "$ICONSET/icon_${S}x${S}@2x.png" >/dev/null
+                fi
+            fi
+        done
+        iconutil -c icns "$ICONSET" -o "$PROJECT_DIR/Resources/icon.icns"
+        rm -rf "$(dirname "$ICONSET")"
+    fi
     cp "$PROJECT_DIR/Resources/icon.icns" "$APP/Contents/Resources/icon.icns"
 fi
 
