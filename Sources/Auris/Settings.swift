@@ -81,7 +81,7 @@ struct StoredSettings: Codable {
     var soundComplete: String? = "Hero"
     var pasteDelaySeconds: Double = 0.05
     var clipboardRestoreDelaySeconds: Double = 0.2
-    var historyRetentionDays: Int = 0
+    var historyRetentionDays: Int = 30
     var startAtLogin: Bool = false
 }
 

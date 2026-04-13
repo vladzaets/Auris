@@ -36,8 +36,7 @@ No CLI arguments. Change settings via menu bar or `~/.auris/settings.json`.
 
 ## Architecture
 
-- Swift Package Manager project with local dependency on [mlx-swift-audio](https://github.com/DePasqualeOrg/mlx-swift-audio) (`../mlx-swift-audio`)
-- Depends on MLX (Apple's machine learning framework) which requires Metal GPU shaders
+- Local dependency on [whisper.cpp](https://github.com/ggerganov/whisper.cpp) (`../whisper.cpp`), built as CWhisper XCFramework with Metal support
 - Minimum macOS 15.4
 - Settings stored in `~/.auris/settings.json` (migrated from UserDefaults on first launch)
 - Menu-bar only app (LSUIElement=true, no Dock icon)
@@ -68,7 +67,7 @@ All UI work and transcription coordination happens on `@MainActor`. The hotkey t
 
 ### Backend Interface
 
-`WhisperEngineWrapper` wraps `MLXAudio.WhisperEngine` (from mlx-swift-audio). It handles model loading/unloading, language mapping, and transcription. Models are downloaded on first use and cached by mlx-swift-audio.
+`WhisperEngineWrapper` wraps whisper.cpp via the CWhisper XCFramework. It handles model downloading (from Hugging Face), loading/unloading, language mapping, and transcription. Models are cached in `~/.auris/models/` and downloaded on first use.
 
 ## Package Layout
 
@@ -80,7 +79,7 @@ Sources/Auris/
   AppConstants.swift       # File paths (~/.auris/*)
   AudioRecorder.swift      # Mic capture via AVAudioEngine, WAV export
   TranscriptionPipeline.swift  # State machine: idle/recording/transcribing/downloading
-  WhisperEngineWrapper.swift    # MLX Whisper backend wrapper
+  WhisperEngineWrapper.swift    # whisper.cpp backend wrapper
   TextCleaner.swift        # Hallucination loop detection, filler word removal
   PostProcessor.swift      # Regex vocabulary corrections from corrections.txt
   Vocabulary.swift         # Domain vocabulary dictionaries
@@ -109,10 +108,12 @@ Access via `Settings.shared` singleton. Properties are typed (enums `WhisperMode
 | `language` | `en` | Language code for transcription (16 languages) |
 | `recordingHotkey` | `fn` | Push-to-talk key (fn/right_option/right_command) |
 | `postProcessingEnabled` | `true` | Enable vocabulary corrections |
+| `initialPromptEnabled` | `true` | Enable initial prompt for transcription |
 | `collectTrainingData` | `true` | Save audio/transcript pairs |
 | `soundStart/Stop/Complete/Error` | `Pop`/`Basso`/`Hero`/`Basso` | System sounds for events |
 | `pasteDelaySeconds` | `0.05` | Delay before Cmd+V |
 | `clipboardRestoreDelaySeconds` | `0.2` | Delay before clipboard restore |
+| `historyRetentionDays` | `30` | Days to keep transcription history (0 = forever) |
 | `startAtLogin` | `false` | Launch at login via SMAppService |
 
 ## Testing
@@ -125,8 +126,9 @@ No formal test suite. Manual testing via the app itself.
 - Each file = one responsibility
 - `os_log` / `Logger` for logging (not `print`)
 - Error handling: do/catch at boundaries, `NSAlert` for user-facing errors
-- No third-party dependencies beyond mlx-swift-audio (local package)
+- No third-party dependencies beyond CWhisper (local XCFramework)
 - Settings singleton: `Settings.shared` — read directly, set triggers automatic save
+- **Keep AGENTS.md up to date:** when you change architecture, dependencies, file layout, settings, or any substantial aspect of the project, update this file accordingly
 
 ## macOS Permissions
 
