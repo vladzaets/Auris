@@ -379,7 +379,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try await pipeline.reloadEngine()
                 resetToIdle()
-                showNotification("Model Changed", "Now using \(model.displayName)")
+
             } catch {
                 Settings.shared.whisperModel = old
                 resetToIdle()
