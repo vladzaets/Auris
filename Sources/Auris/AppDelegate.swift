@@ -65,9 +65,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             do {
                 try await pipeline.loadEngine()
             } catch {
+                resetToIdle()
                 showErrorMessage("Failed to initialize speech model: \(error.localizedDescription)")
                 return
             }
+
+            resetToIdle()
 
             if accessible {
                 hotkeyManager?.start()
@@ -495,7 +498,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Helpers
 
     private func updateMenuCheckmarks(submenu: NSMenu, selectedItem: NSMenuItem) {
-        for item in submenu.items {
+        for item in submenu.items where item.representedObject != nil {
             item.state = item === selectedItem ? .on : .off
         }
     }
