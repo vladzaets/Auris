@@ -74,7 +74,8 @@ final class TranscriptionPipeline {
 
         Task {
             do {
-                let result = try await engine.transcribe(url: url, initialPrompt: Vocabulary.buildInitialPrompt())
+                let prompt = Settings.shared.initialPromptEnabled ? Vocabulary.buildInitialPrompt() : nil
+                let result = try await engine.transcribe(url: url, initialPrompt: prompt)
                 try? FileManager.default.removeItem(at: url)
 
                 var text = result.text.trimmingCharacters(in: .whitespacesAndNewlines)

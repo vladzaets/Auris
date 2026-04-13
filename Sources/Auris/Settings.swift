@@ -60,6 +60,7 @@ struct StoredSettings: Codable {
     var whisperModel: String = WhisperModel.largeV3Turbo.rawValue
     var recordingHotkey: String = RecordingHotkey.fn.rawValue
     var postProcessingEnabled: Bool = true
+    var initialPromptEnabled: Bool = true
     var collectTrainingData: Bool = true
     var soundStart: String? = "Pop"
     var soundStop: String? = "Basso"
@@ -92,6 +93,10 @@ final class Settings: @unchecked Sendable {
     var postProcessingEnabled: Bool {
         get { stored.postProcessingEnabled }
         set { stored.postProcessingEnabled = newValue; save() }
+    }
+    var initialPromptEnabled: Bool {
+        get { stored.initialPromptEnabled }
+        set { stored.initialPromptEnabled = newValue; save() }
     }
     var collectTrainingData: Bool {
         get { stored.collectTrainingData }

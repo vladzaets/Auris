@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var languageSubmenu: NSMenu!
     private var soundSubmenus: [String: NSMenu] = [:]
     private var hotkeySubmenu: NSMenu!
+    private var initialPromptMenuItem: NSMenuItem!
     private var autostartMenuItem: NSMenuItem!
     private var timer: Timer?
     private var recordingStartTime: Date?
@@ -112,6 +113,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if model == Settings.shared.whisperModel { item.state = .on }
             modelSubmenu.addItem(item)
         }
+        modelSubmenu.addItem(NSMenuItem.separator())
+        let promptItem = NSMenuItem(title: "Initial Prompt", action: #selector(toggleInitialPrompt), keyEquivalent: "")
+        promptItem.state = Settings.shared.initialPromptEnabled ? .on : .off
+        initialPromptMenuItem = promptItem
+        modelSubmenu.addItem(promptItem)
         modelItem.submenu = modelSubmenu
         menu.addItem(modelItem)
 
@@ -427,6 +433,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             autostartMenuItem.state = .on
             Settings.shared.startAtLogin = true
         }
+    }
+
+    @objc private func toggleInitialPrompt() {
+        let enabled = !Settings.shared.initialPromptEnabled
+        Settings.shared.initialPromptEnabled = enabled
+        initialPromptMenuItem.state = enabled ? .on : .off
     }
 
     @objc private func editCorrections() {
