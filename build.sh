@@ -5,6 +5,10 @@ PROJECT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BUILD_DIR="$PROJECT_DIR/.build/xcode"
 APP="$PROJECT_DIR/Auris.app"
 
+VERSION_FILE="$PROJECT_DIR/VERSION"
+APP_VERSION="$(tr -d '[:space:]' < "$VERSION_FILE")"
+BUILD_NUMBER="${2:-1}"
+
 CONFIG="Release"
 ICON_MAX_SIZE=""
 BUILD_DMG=false
@@ -66,7 +70,7 @@ if [ -f "$PROJECT_DIR/Resources/54x54.png" ]; then
     cp "$PROJECT_DIR/Resources/54x54.png" "$APP/Contents/Resources/54x54.png"
 fi
 
-cat > "$APP/Contents/Info.plist" << 'EOF'
+cat > "$APP/Contents/Info.plist" << EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -88,9 +92,9 @@ cat > "$APP/Contents/Info.plist" << 'EOF'
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>${APP_VERSION}</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>${BUILD_NUMBER}</string>
     <key>LSMinimumSystemVersion</key>
     <string>15.4</string>
     <key>LSUIElement</key>
@@ -140,9 +144,9 @@ if [ "$BUILD_DMG" = true ]; then
     STAGING=$(mktemp -d)
     cp -R "$APP" "$STAGING/"
     ln -s /Applications "$STAGING/Applications"
-    hdiutil create -volname "Auris" -srcfolder "$STAGING" -ov -format UDZO "$PROJECT_DIR/Auris.dmg"
+    hdiutil create -volname "Auris" -srcfolder "$STAGING" -ov -format UDZO "$PROJECT_DIR/Auris-${APP_VERSION}.dmg"
     rm -rf "$STAGING"
-    echo "==> Done: $PROJECT_DIR/Auris.dmg"
+    echo "==> Done: $PROJECT_DIR/Auris-${APP_VERSION}.dmg"
 else
     echo "==> Done: $APP"
 fi
