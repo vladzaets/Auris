@@ -9,7 +9,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let idleIcon: NSImage = {
         let url = Bundle.main.url(forResource: "54x54", withExtension: "png")!
         let img = NSImage(contentsOf: url)!
-        img.size = NSSize(width: 18, height: 18)
+        img.size = NSSize(width: 20, height: 20)
         img.isTemplate = true
         return img
     }()
@@ -75,8 +75,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             if accessible {
                 hotkeyManager?.start()
             } else {
-                showNotification("Hotkey Not Working",
-                    "Accessibility permission is required. Go to System Settings → Privacy & Security → Accessibility and enable Auris, then relaunch.")
+                showNotification("Required Permissions Not Granted",
+                    "Auris needs the following permissions to work:\n\n• Accessibility — to paste text into the active app\n• Microphone — to record your voice\n• Input Monitoring — to detect the hotkey\n\nGo to System Settings → Privacy & Security and enable Auris in each section, then relaunch.")
             }
 
             if Settings.shared.isFirstLaunch {
