@@ -173,22 +173,6 @@ struct Vocabulary {
         return merged
     }
 
-    static let initialPromptVocabulary =
-        "The following is a clear, well-structured transcription. "
-        + "We deploy to PostgreSQL, MySQL, MongoDB, Redis, and Elasticsearch. "
-        + "The stack uses Kubernetes, Docker, nginx, Terraform, and CI/CD via GitHub. "
-        + "Authentication uses OAuth, JWT, CORS, and CSRF protection. "
-        + "The API layer uses GraphQL, gRPC, WebSocket, and REST API endpoints. "
-        + "The frontend is built with JavaScript, TypeScript, React, Next.js, "
-        + "Vue.js, Svelte, and Node.js, styled with Tailwind CSS and webpack. "
-        + "We follow ARIA and WCAG accessibility standards in our HTML5 and CSS Grid layouts. "
-        + "Machine learning uses PyTorch, TensorFlow, scikit-learn, NumPy, and SciPy. "
-        + "We work with LLaMA, GPT-4, DALL-E, LoRA, RAG, RLHF, ONNX, CoreML, and MLX models "
-        + "via Hugging Face, LangChain, FastAPI, Django, and Pydantic. "
-        + "Deployment targets Vercel, Cloudflare, Supabase, Gunicorn, and Uvicorn. "
-        + "We use Whisper, mlx-whisper, Auris, Claude, Anthropic, and OpenAI tools "
-        + "on macOS, iOS, iPadOS with Xcode, Swift, SwiftUI on Apple Silicon."
-
     static func loadUserPromptTerms() -> String? {
         let url = AppConstants.promptTermsFile
         guard FileManager.default.fileExists(atPath: url.path) else { return nil }
@@ -205,11 +189,12 @@ struct Vocabulary {
     }
 
     static func buildInitialPrompt() -> String? {
+        let basePrompt = InitialPrompt.forLanguage(Settings.shared.language)
         let userTerms = loadUserPromptTerms()
         if let userTerms {
-            return "\(initialPromptVocabulary), \(userTerms)"
+            return "\(basePrompt), \(userTerms)"
         }
-        return initialPromptVocabulary
+        return basePrompt
     }
 
     static func createPromptTermsTemplate() {
