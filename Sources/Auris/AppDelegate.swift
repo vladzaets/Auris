@@ -20,9 +20,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var recordMenuItem: NSMenuItem!
     private var cancelMenuItem: NSMenuItem!
     private var modelSubmenu: NSMenu!
+    private var modelMenuItem: NSMenuItem!
     private var languageSubmenu: NSMenu!
     private var soundSubmenus: [String: NSMenu] = [:]
     private var hotkeySubmenu: NSMenu!
+    private var languageMenuItem: NSMenuItem!
     private var initialPromptMenuItem: NSMenuItem!
     private var autostartMenuItem: NSMenuItem!
     private var timer: Timer?
@@ -109,6 +111,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
 
         let modelItem = NSMenuItem(title: "Model", action: nil, keyEquivalent: "")
+        modelMenuItem = modelItem
         modelSubmenu = NSMenu()
         for model in WhisperModel.allCases {
             let item = NSMenuItem(title: model.displayName, action: #selector(selectModel(_:)), keyEquivalent: "")
@@ -122,9 +125,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         initialPromptMenuItem = promptItem
         modelSubmenu.addItem(promptItem)
         modelItem.submenu = modelSubmenu
+        updateModelMenuItem()
         menu.addItem(modelItem)
 
         let langItem = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
+        languageMenuItem = langItem
         languageSubmenu = NSMenu()
         for lang in AppLanguage.allCases {
             let item = NSMenuItem(title: lang.displayName, action: #selector(selectLanguage(_:)), keyEquivalent: "")
@@ -133,6 +138,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             languageSubmenu.addItem(item)
         }
         langItem.submenu = languageSubmenu
+        updateLanguageMenuItem()
         menu.addItem(langItem)
 
         let soundsItem = NSMenuItem(title: "Sounds", action: nil, keyEquivalent: "")
@@ -368,6 +374,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let old = Settings.shared.whisperModel
         Settings.shared.whisperModel = model
         updateMenuCheckmarks(submenu: modelSubmenu, selectedItem: sender)
+        updateModelMenuItem()
 
         statusMenuItem.title = "Status: Switching model…"
         if let button = statusItem.button {
@@ -396,6 +403,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         Settings.shared.language = lang
         updateMenuCheckmarks(submenu: languageSubmenu, selectedItem: sender)
+        updateLanguageMenuItem()
 
         statusMenuItem.title = "Status: Switching language…"
         if let button = statusItem.button {
@@ -496,6 +504,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: - Helpers
+
+    private func updateModelMenuItem() {
+        let code = Settings.shared.whisperModel.shortCode
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.tabStops = [NSTextTab(type: .leftTabStopType, location: 80)]
+        let attr = NSMutableAttributedString(string: "Model\t\(code)")
+        attr.addAttribute(.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: attr.length))
+        let codeRange = (attr.string as NSString).range(of: code)
+        attr.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: codeRange)
+        modelMenuItem.attributedTitle = attr
+    }
+
+    private func updateLanguageMenuItem() {
+        let code = Settings.shared.language.shortCode
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.tabStops = [NSTextTab(type: .leftTabStopType, location: 80)]
+        let attr = NSMutableAttributedString(string: "Language\t\(code)")
+        attr.addAttribute(.paragraphStyle, value: paragraph, range: NSRange(location: 0, length: attr.length))
+        let codeRange = (attr.string as NSString).range(of: code)
+        attr.addAttribute(.foregroundColor, value: NSColor.secondaryLabelColor, range: codeRange)
+        languageMenuItem.attributedTitle = attr
+    }
 
     private func updateMenuCheckmarks(submenu: NSMenu, selectedItem: NSMenuItem) {
         for item in submenu.items where item.representedObject != nil {

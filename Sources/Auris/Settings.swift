@@ -6,6 +6,15 @@ enum WhisperModel: String, CaseIterable, Codable {
     case largeV3 = "large-v3"
     case largeV3Turbo = "large-v3-turbo"
 
+    var shortCode: String {
+        switch self {
+        case .small: "S"
+        case .medium: "M"
+        case .largeV3: "L"
+        case .largeV3Turbo: "L-t"
+        }
+    }
+
     var displayName: String {
         switch self {
         case .small: "small (~500 MB)"
@@ -32,6 +41,10 @@ enum RecordingHotkey: String, CaseIterable, Codable {
 
 enum AppLanguage: String, CaseIterable, Codable {
     case en, ru, de, fr, es, it, pt, nl, ja, ko, zh, ar, hi, uk, pl, tr
+
+    var shortCode: String {
+        rawValue.prefix(1).uppercased() + rawValue.dropFirst()
+    }
 
     var displayName: String {
         switch self {
