@@ -139,6 +139,35 @@ The app requires three permissions:
 
 Permissions are checked via `Permissions.swift`. The app prompts on first launch. If permissions break after changes, remove from System Settings → Privacy & Security and re-add.
 
+## Release Process
+
+1. **Update version** in `VERSION` file (e.g. `1.1.0`)
+2. **Build .app and DMG:**
+   ```bash
+   ./build.sh --dmg
+   ```
+   Output: `Auris.app` and `Auris-VERSION.dmg` in project root
+3. **Create zip for Homebrew** (must use `-y` to preserve symlinks in frameworks):
+   ```bash
+   zip -r -y Auris-VERSION.zip Auris.app
+   ```
+4. **Compute sha256:**
+   ```bash
+   shasum -a 256 Auris-VERSION.zip
+   ```
+5. **Create GitHub release and upload assets:**
+   ```bash
+   gh release create vVERSION Auris-VERSION.dmg Auris-VERSION.zip \
+     --repo vladzaets/auris --title "vVERSION" --notes "Release vVERSION"
+   ```
+6. **Update Homebrew tap** (`../homebrew-auris`):
+   - Edit `Casks/auris.rb`: update `version` and `sha256`
+   - Commit and push:
+     ```bash
+     git add -A && git commit -m "Bump to VERSION" && git push
+     ```
+7. **Commit version bump** in this repo (if not already committed)
+
 ## User Data
 
 All in `~/.auris/`: `settings.json`, `transcriptions.jsonl`, `corrections.txt`, `prompt_terms.txt`.
