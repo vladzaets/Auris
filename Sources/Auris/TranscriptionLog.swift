@@ -1,7 +1,7 @@
 import Foundation
 
 struct TranscriptionLog {
-    static func save(text: String, model: String, duration: TimeInterval? = nil, initialPrompt: Bool? = nil) {
+    static func save(text: String, model: String, language: String? = nil, duration: TimeInterval? = nil, initialPrompt: Bool? = nil) {
         AppConstants.ensureDataDir()
 
         var entry: [String: Any] = [
@@ -9,6 +9,10 @@ struct TranscriptionLog {
             "text": text,
             "model": model,
         ]
+
+        if let language {
+            entry["language"] = language
+        }
 
         if let duration {
             entry["duration"] = Double(round(duration * 100)) / 100

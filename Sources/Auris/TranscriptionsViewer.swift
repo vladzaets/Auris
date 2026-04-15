@@ -140,7 +140,11 @@ final class TranscriptionsViewer: NSObject {
             }
 
             let model = entry["model"] as? String ?? ""
+            let language = entry["language"] as? String ?? ""
             var metaParts = ["[\(ts)]", model]
+            if !language.isEmpty {
+                metaParts.append(language)
+            }
             if let duration = entry["duration"] as? Double {
                 metaParts.append(String(format: "%.2fs", duration))
             }
