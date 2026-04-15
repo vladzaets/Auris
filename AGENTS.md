@@ -90,6 +90,8 @@ Sources/Auris/
   Autostart.swift           # Login item via SMAppService (macOS 13+)
   TranscriptionLog.swift   # JSONL logging
   TranscriptionsViewer.swift  # History window (NSWindow + NSTableView)
+  UpdateChecker.swift      # GitHub release check, version comparison
+  UpdateAvailableWindow.swift # Update notification window (Download/Skip/Remind)
 Resources/
   icon.icns                # App icon
   icon.png                 # App icon source
@@ -115,6 +117,8 @@ Access via `Settings.shared` singleton. Properties are typed (enums `WhisperMode
 | `clipboardRestoreDelaySeconds` | `0.2` | Delay before clipboard restore |
 | `historyRetentionDays` | `30` | Days to keep transcription history (0 = forever) |
 | `startAtLogin` | `false` | Launch at login via SMAppService |
+| `checkForUpdatesEnabled` | `true` | Auto-check for updates on launch |
+| `skippedVersion` | `nil` | Version to skip in auto-update notifications |
 
 ## Testing
 

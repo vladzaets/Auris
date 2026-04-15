@@ -31,6 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var accessibilityMenuItem: NSMenuItem!
     private var inputMonitoringMenuItem: NSMenuItem!
     private var microphoneMenuItem: NSMenuItem!
+    private var checkForUpdatesMenuItem: NSMenuItem!
+    private var checkForUpdatesToggleMenuItem: NSMenuItem!
     private var timer: Timer?
     private var recordingStartTime: Date?
 
@@ -90,6 +92,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 showNotification("Welcome to Auris!",
                     "Hold the \(hotkeyLabel) key to dictate, release to transcribe and paste.")
             }
+
+            UpdateChecker.check()
         }
     }
 
@@ -193,6 +197,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         autostartMenuItem.state = Autostart.isEnabled ? .on : .off
         menu.addItem(autostartMenuItem)
 
+        checkForUpdatesToggleMenuItem = NSMenuItem(title: "Check for Updates on Launch", action: #selector(toggleCheckForUpdates), keyEquivalent: "")
+        checkForUpdatesToggleMenuItem.state = Settings.shared.checkForUpdatesEnabled ? .on : .off
+        menu.addItem(checkForUpdatesToggleMenuItem)
+
         let permsItem = NSMenuItem(title: "Permissions", action: nil, keyEquivalent: "")
         let permsMenu = NSMenu()
         accessibilityMenuItem = NSMenuItem(title: "Accessibility", action: #selector(openAccessibility), keyEquivalent: "")
@@ -205,6 +213,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         menu.addItem(permsItem)
 
         menu.addItem(NSMenuItem.separator())
+        checkForUpdatesMenuItem = NSMenuItem(title: "Check for Updates...", action: #selector(checkForUpdates), keyEquivalent: "")
+        menu.addItem(checkForUpdatesMenuItem)
         menu.addItem(NSMenuItem(title: "About", action: #selector(showAbout), keyEquivalent: ""))
         menu.addItem(NSMenuItem(title: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
@@ -514,6 +524,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc private func showAbout() {
         aboutWindow.show()
+    }
+
+    @objc private func checkForUpdates() {
+        UpdateChecker.check(forced: true)
+    }
+
+    @objc private func toggleCheckForUpdates() {
+        let enabled = !Settings.shared.checkForUpdatesEnabled
+        Settings.shared.checkForUpdatesEnabled = enabled
+        checkForUpdatesToggleMenuItem.state = enabled ? .on : .off
     }
 
     // MARK: - Helpers

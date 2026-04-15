@@ -83,6 +83,9 @@ struct StoredSettings: Codable {
     var clipboardRestoreDelaySeconds: Double = 0.2
     var historyRetentionDays: Int = 30
     var startAtLogin: Bool = false
+    var checkForUpdatesEnabled: Bool? = true
+    var lastUpdateCheck: Date? = nil
+    var skippedVersion: String? = nil
 }
 
 final class Settings: @unchecked Sendable {
@@ -146,6 +149,18 @@ final class Settings: @unchecked Sendable {
     var startAtLogin: Bool {
         get { stored.startAtLogin }
         set { stored.startAtLogin = newValue; save() }
+    }
+    var checkForUpdatesEnabled: Bool {
+        get { stored.checkForUpdatesEnabled ?? true }
+        set { stored.checkForUpdatesEnabled = newValue; save() }
+    }
+    var lastUpdateCheck: Date? {
+        get { stored.lastUpdateCheck }
+        set { stored.lastUpdateCheck = newValue; save() }
+    }
+    var skippedVersion: String? {
+        get { stored.skippedVersion }
+        set { stored.skippedVersion = newValue; save() }
     }
 
     private init() {
