@@ -33,7 +33,14 @@ Download the [latest release DMG file](https://github.com/vladzaets/Auris/releas
 
 > **First launch:** macOS will ask for **Microphone**, **Accessibility**, and **Input Monitoring** permissions. Grant all three — the app needs the microphone to record, Accessibility to paste text into other apps, and Input Monitoring to detect the hotkey.
 
-### Option 2: Build from source
+### Option 2: Homebrew
+
+```bash
+brew tap vladzaets/auris
+brew install auris
+```
+
+### Option 3: Build from source
 
 **Prerequisites:** Xcode 16+, macOS 15.4+, Apple Silicon Mac
 

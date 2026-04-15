@@ -59,11 +59,12 @@ All UI work and transcription coordination happens on `@MainActor`. The hotkey t
 ### Data Flow
 
 1. User holds hotkey → HotkeyManager dispatches `handleHotkeyStart()` on @MainActor
-2. AppDelegate calls `pipeline.startRecording()` → AudioRecorder captures to temp WAV
+2. AppDelegate calls `pipeline.startRecording()` → AudioRecorder captures to temp WAV. If model not loaded, loading starts in parallel with recording.
 3. User releases hotkey → HotkeyManager dispatches `handleHotkeyStop()` on @MainActor
-4. AppDelegate calls `pipeline.stopRecording()` → stops recorder, enters transcribing state
+4. AppDelegate calls `pipeline.stopRecording()` → stops recorder. If model still loading, waits for it; then enters transcribing state.
 5. Pipeline spawns async task: transcribe via WhisperEngineWrapper → strip hallucination loops → remove filler words → apply vocabulary corrections
 6. Result dispatched to AppDelegate → TextInjector pastes via clipboard + Cmd+V
+7. After transcription completes, auto-unload timer is scheduled (if enabled). When timer fires and state is idle, model is unloaded from memory.
 
 ### Backend Interface
 
@@ -102,7 +103,7 @@ Resources/
 
 All settings live in `Settings.swift` as `StoredSettings` (Codable struct). Persistence is automatic to `~/.auris/settings.json`.
 
-Access via `Settings.shared` singleton. Properties are typed (enums `WhisperModel`, `AppLanguage`, `RecordingHotkey`).
+Access via `Settings.shared` singleton. Properties are typed (enums `WhisperModel`, `AppLanguage`, `RecordingHotkey`, `AutoUnloadInterval`).
 
 | Setting | Default | Description |
 |---|---|---|
@@ -119,6 +120,7 @@ Access via `Settings.shared` singleton. Properties are typed (enums `WhisperMode
 | `startAtLogin` | `false` | Launch at login via SMAppService |
 | `checkForUpdatesEnabled` | `true` | Auto-check for updates on launch |
 | `skippedVersion` | `nil` | Version to skip in auto-update notifications |
+| `autoUnloadInterval` | `never` | Unload model from memory after inactivity (15/30/60 min, never) |
 
 ## Testing
 
@@ -132,6 +134,7 @@ No formal test suite. Manual testing via the app itself.
 - Error handling: do/catch at boundaries, `NSAlert` for user-facing errors
 - No third-party dependencies beyond CWhisper (local XCFramework)
 - Settings singleton: `Settings.shared` — read directly, set triggers automatic save
+- **Adding new settings:** declare the new field in `StoredSettings` as `Optional` with a default value (e.g. `var autoUnloadInterval: String? = AutoUnloadInterval.never.rawValue`). This ensures existing `settings.json` files without the new key decode correctly instead of being overwritten with defaults. The computed property in `Settings` handles the `nil` → default fallback.
 - **Keep AGENTS.md up to date:** when you change architecture, dependencies, file layout, settings, or any substantial aspect of the project, update this file accordingly
 
 ## macOS Permissions
@@ -165,7 +168,7 @@ Permissions are checked via `Permissions.swift`. The app prompts on first launch
      --repo vladzaets/auris --title "vVERSION" --notes "Release vVERSION"
    ```
 6. **Update Homebrew tap** (`../homebrew-auris`):
-   - Edit `Casks/auris.rb`: update `version` and `sha256`
+   - Edit `Casks/auris.rb`: update `version`, `url` and `sha256`
    - Commit and push:
      ```bash
      git add -A && git commit -m "Bump to VERSION" && git push

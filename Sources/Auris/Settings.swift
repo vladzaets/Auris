@@ -39,6 +39,34 @@ enum RecordingHotkey: String, CaseIterable, Codable {
     }
 }
 
+enum AutoUnloadInterval: String, CaseIterable, Codable {
+    case immediately = "immediately"
+    case min15 = "15"
+    case min30 = "30"
+    case min60 = "60"
+    case never = "never"
+
+    var displayName: String {
+        switch self {
+        case .immediately: "Immediately"
+        case .min15: "15 Minutes"
+        case .min30: "30 Minutes"
+        case .min60: "60 Minutes"
+        case .never: "Never"
+        }
+    }
+
+    var timeInterval: TimeInterval {
+        switch self {
+        case .immediately: 0
+        case .min15: 15 * 60
+        case .min30: 30 * 60
+        case .min60: 60 * 60
+        case .never: .infinity
+        }
+    }
+}
+
 enum AppLanguage: String, CaseIterable, Codable {
     case en, ru, de, fr, es, it, pt, nl, ja, ko, zh, ar, hi, uk, pl, tr
 
@@ -86,6 +114,7 @@ struct StoredSettings: Codable {
     var checkForUpdatesEnabled: Bool? = true
     var lastUpdateCheck: Date? = nil
     var skippedVersion: String? = nil
+    var autoUnloadInterval: String? = AutoUnloadInterval.never.rawValue
 }
 
 final class Settings: @unchecked Sendable {
@@ -161,6 +190,10 @@ final class Settings: @unchecked Sendable {
     var skippedVersion: String? {
         get { stored.skippedVersion }
         set { stored.skippedVersion = newValue; save() }
+    }
+    var autoUnloadInterval: AutoUnloadInterval {
+        get { stored.autoUnloadInterval.flatMap { AutoUnloadInterval(rawValue: $0) } ?? .never }
+        set { stored.autoUnloadInterval = newValue.rawValue; save() }
     }
 
     private init() {

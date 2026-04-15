@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var languageSubmenu: NSMenu!
     private var soundSubmenus: [String: NSMenu] = [:]
     private var hotkeySubmenu: NSMenu!
+    private var autoUnloadSubmenu: NSMenu!
     private var languageMenuItem: NSMenuItem!
     private var initialPromptMenuItem: NSMenuItem!
     private var autostartMenuItem: NSMenuItem!
@@ -69,32 +70,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         let accessible = Permissions.checkAccessibility(prompt: true)
         Permissions.triggerMicrophonePermission()
 
-        Task {
-            do {
-                try await pipeline.loadEngine()
-            } catch {
-                resetToIdle()
-                showErrorMessage("Failed to initialize speech model: \(error.localizedDescription)")
-                return
-            }
-
-            resetToIdle()
-
-            if accessible {
-                hotkeyManager?.start()
-            } else {
-                showNotification("Required Permissions Not Granted",
-                    "Auris needs the following permissions to work:\n\n• Accessibility — to paste text into the active app\n• Microphone — to record your voice\n• Input Monitoring — to detect the hotkey\n\nGo to System Settings → Privacy & Security and enable Auris in each section, then relaunch.")
-            }
-
-            if Settings.shared.isFirstLaunch {
-                let hotkeyLabel = Settings.shared.recordingHotkey.displayName
-                showNotification("Welcome to Auris!",
-                    "Hold the \(hotkeyLabel) key to dictate, release to transcribe and paste.")
-            }
-
-            UpdateChecker.check()
+        if accessible {
+            hotkeyManager?.start()
+        } else {
+            showNotification("Required Permissions Not Granted",
+                "Auris needs the following permissions to work:\n\n• Accessibility — to paste text into the active app\n• Microphone — to record your voice\n• Input Monitoring — to detect the hotkey\n\nGo to System Settings → Privacy & Security and enable Auris in each section, then relaunch.")
         }
+
+        if Settings.shared.isFirstLaunch {
+            let hotkeyLabel = Settings.shared.recordingHotkey.displayName
+            showNotification("Welcome to Auris!",
+                "Hold the \(hotkeyLabel) key to dictate, release to transcribe and paste.")
+        }
+
+        UpdateChecker.check()
     }
 
     // MARK: - Menu
@@ -132,6 +121,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         promptItem.state = Settings.shared.initialPromptEnabled ? .on : .off
         initialPromptMenuItem = promptItem
         modelSubmenu.addItem(promptItem)
+        let autoUnloadItem = NSMenuItem(title: "Unload Model After", action: nil, keyEquivalent: "")
+        autoUnloadSubmenu = NSMenu()
+        for interval in AutoUnloadInterval.allCases {
+            let item = NSMenuItem(title: interval.displayName, action: #selector(selectAutoUnload(_:)), keyEquivalent: "")
+            item.representedObject = interval.rawValue
+            if interval == Settings.shared.autoUnloadInterval { item.state = .on }
+            autoUnloadSubmenu.addItem(item)
+        }
+        autoUnloadItem.submenu = autoUnloadSubmenu
+        modelSubmenu.addItem(autoUnloadItem)
         modelItem.submenu = modelSubmenu
         updateModelMenuItem()
         menu.addItem(modelItem)
@@ -331,6 +330,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             SoundPlayer.play(Settings.shared.soundError)
             return
         }
+
         do {
             try pipeline.startRecording()
             SoundPlayer.play(Settings.shared.soundStart)
@@ -395,6 +395,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         updateMenuCheckmarks(submenu: modelSubmenu, selectedItem: sender)
         updateModelMenuItem()
 
+        if !pipeline.isEngineLoaded { return }
+
         statusMenuItem.title = "Status: Switching model…"
         if let button = statusItem.button {
             button.image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: "Processing")
@@ -405,7 +407,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             do {
                 try await pipeline.reloadEngine()
                 resetToIdle()
-
             } catch {
                 Settings.shared.whisperModel = old
                 resetToIdle()
@@ -423,6 +424,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Settings.shared.language = lang
         updateMenuCheckmarks(submenu: languageSubmenu, selectedItem: sender)
         updateLanguageMenuItem()
+
+        if !pipeline.isEngineLoaded { return }
 
         statusMenuItem.title = "Status: Switching language…"
         if let button = statusItem.button {
@@ -467,6 +470,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         Settings.shared.recordingHotkey = hk
         updateMenuCheckmarks(submenu: hotkeySubmenu, selectedItem: sender)
         hotkeyManager?.setHotkey(hk)
+    }
+
+    @objc private func selectAutoUnload(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let interval = AutoUnloadInterval(rawValue: raw)
+        else { return }
+
+        Settings.shared.autoUnloadInterval = interval
+        updateMenuCheckmarks(submenu: autoUnloadSubmenu, selectedItem: sender)
+
+        if pipeline.isEngineLoaded {
+            pipeline.scheduleAutoUnload()
+        }
     }
 
     @objc private func toggleAutostart() {
